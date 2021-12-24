@@ -151,10 +151,11 @@ def rank_pages(
                 ]
             )
         else:
+            corpus[page_p] = set(corpus.keys())
             pageranks[page_p] = (1 - damping_factor) / len(
                 corpus
             ) + damping_factor * sum(
-                [pageranks[page] / len(corpus[page]) for page in corpus.keys()]
+                [pageranks[link] / len(corpus[link]) for link in links]
             )  #  If no links, choose from every page (inclusive) instead
 
     converged = True
