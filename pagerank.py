@@ -96,16 +96,19 @@ def sample_pagerank(corpus, damping_factor, n):
     current_n = 0
 
     while current_n < n:
+        # Start by choosing a random page of equal probability
         if current_page is None:
             current_page = random.choice(list(corpus))
             page_hits[current_page] += 1
             current_n += 1
             continue
         model = transition_model(corpus, current_page, damping_factor)
+        # Choose a page given the probability as weights
         current_page = random.choices(list(model.keys()), list(model.values()))[0]
         page_hits[current_page] += 1
         current_n += 1
 
+    # Determine pagerank by dividing hits by the sample number
     return {page: hits / n for page, hits in page_hits.items()}
 
 
@@ -130,6 +133,7 @@ def rank_pages(
 ) -> dict[str, float]:
     """Determine new page ranks from given page ranks."""
 
+    # Keep track to compare for convergence
     old_pageranks = pageranks.copy()
 
     for page_p, links in corpus.items():
@@ -143,7 +147,7 @@ def rank_pages(
                         page_i
                         for page_i, page_i_links in corpus.items()
                         if page_p in page_i_links
-                    ]
+                    ]  # Creates an array of pages (i) that link to the targeted page (p)
                 ]
             )
         else:
@@ -151,7 +155,7 @@ def rank_pages(
                 corpus
             ) + damping_factor * sum(
                 [pageranks[page] / len(corpus[page]) for page in corpus.keys()]
-            )
+            )  #  If no links, choose from every page (inclusive) instead
 
     converged = True
     for page, pagerank in pageranks.items():
