@@ -5,6 +5,7 @@ import sys
 
 DAMPING = 0.85
 SAMPLES = 10000
+CONVERGENCE = 0.001
 
 
 def main():
@@ -117,7 +118,51 @@ def iterate_pagerank(corpus, damping_factor):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    raise NotImplementedError
+
+    # Initialize every pagerank with equal probability
+    pageranks = {page: float(1 / len(corpus)) for page in corpus.keys()}
+
+    return rank_pages(corpus, damping_factor, pageranks)
+
+
+def rank_pages(
+    corpus: dict[str, set[str]], damping_factor: float, pageranks: dict[str, float]
+) -> dict[str, float]:
+    """Determine new page ranks from given page ranks."""
+
+    old_pageranks = pageranks.copy()
+
+    for page_p, links in corpus.items():
+        if len(links) > 0:
+            pageranks[page_p] = (1 - damping_factor) / len(
+                corpus
+            ) + damping_factor * sum(
+                [
+                    pageranks[link] / len(corpus[link])
+                    for link in [
+                        page_i
+                        for page_i, page_i_links in corpus.items()
+                        if page_p in page_i_links
+                    ]
+                ]
+            )
+        else:
+            pageranks[page_p] = (1 - damping_factor) / len(
+                corpus
+            ) + damping_factor * sum(
+                [pageranks[page] / len(corpus[page]) for page in corpus.keys()]
+            )
+
+    converged = True
+    for page, pagerank in pageranks.items():
+        if abs(old_pageranks[page] - pagerank) > CONVERGENCE:
+            converged = False
+            break
+
+    if not converged:
+        rank_pages(corpus, damping_factor, pageranks)
+
+    return pageranks
 
 
 if __name__ == "__main__":
